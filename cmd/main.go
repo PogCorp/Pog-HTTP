@@ -78,7 +78,7 @@ func getHostFromURL(url *url.URL) (string, error) {
 	return baseHost + ":" + url.Port(), nil
 }
 
-func (rb *RequestBuilder) Raw() (string, error) {
+func (rb *RequestBuilder) raw() (string, error) {
 	var request strings.Builder
 
 	parsedURL, err := url.Parse(rb.url)
@@ -116,6 +116,17 @@ func (rb *RequestBuilder) Raw() (string, error) {
 	return request.String(), nil
 }
 
+func (rb *RequestBuilder) Send() error {
+	payload, err := rb.raw()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(payload)
+
+	return nil
+}
+
 func main() {
 	rb := NewRequestBuilder(
 		"POST", "https://example.com:42069/",
@@ -125,12 +136,8 @@ func main() {
 			"Accept-Encoding": "gzip",
 		}))
 
-	rawRequest, err := rb.Raw()
-
-	if err != nil {
+	if err := rb.Send(); err != nil {
 		fmt.Println("In Raw Request got error:", err)
 		return
 	}
-
-	fmt.Println(rawRequest)
 }
