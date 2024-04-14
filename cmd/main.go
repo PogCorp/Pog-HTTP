@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 )
 
@@ -16,8 +15,6 @@ type RequestBuilder struct {
 	header  Header
 	version string
 }
-
-var protocolRemovalRegex = regexp.MustCompile(`(?:https?://[^/]+)?(/.*)`)
 
 type RequestBuilderOpt func(*RequestBuilder)
 
