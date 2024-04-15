@@ -3,6 +3,7 @@ package requests
 import (
 	"errors"
 	"fmt"
+	"log"
 )
 
 type Request struct {
@@ -15,6 +16,7 @@ type Request struct {
 
 type RequestOpt func(*Request)
 
+// Init
 func defaultRequest() *Request {
 	return &Request{
 		method:  GET,
@@ -25,7 +27,7 @@ func defaultRequest() *Request {
 	}
 }
 
-func NewRequestBuilder(method Method, url string, body []byte, opts ...RequestOpt) *Request {
+func NewRequest(method Method, url string, body []byte, opts ...RequestOpt) *Request {
 	r := defaultRequest()
 	r.url = url
 	r.method = method
@@ -37,16 +39,21 @@ func NewRequestBuilder(method Method, url string, body []byte, opts ...RequestOp
 	return r
 }
 
+// SetVersion
 func WithVersion(ver Version) RequestOpt {
 	return func(r *Request) {
 		r.version = ver
 	}
 }
 
+// alternative to AddHeader
 func WithHeader(keyVal map[string]string) RequestOpt {
 	return func(r *Request) {
 		for k, v := range keyVal {
-			r.header[k] = v
+			err := r.AddHeader(k, v)
+			if err != nil {
+				log.Println("[Warn]: trying to insert Content-Length", err)
+			}
 		}
 	}
 }
