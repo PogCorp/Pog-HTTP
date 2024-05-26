@@ -17,3 +17,7 @@ const (
 	DELETE  Method = "DELETE"
 	OPTIONS Method = "OPTIONS"
 )
+
+type HttpClient interface {
+	Send(req *Request) ([]byte, error)
+}

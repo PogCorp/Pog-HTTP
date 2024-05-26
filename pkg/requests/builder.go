@@ -1,14 +1,17 @@
 package requests
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type Request struct {
 	method  Method
-	url     string
+	url     *Url
+	rawUrl  string
 	body    []byte
 	header  Header
 	version Version
@@ -20,23 +23,36 @@ type RequestOpt func(*Request)
 func defaultRequest() *Request {
 	return &Request{
 		method:  GET,
-		url:     "",
+		rawUrl:  "",
 		body:    nil,
 		header:  make(Header),
 		version: HTTP10,
 	}
 }
 
-func NewRequest(method Method, url string, body []byte, opts ...RequestOpt) *Request {
+func NewRequest(method Method, url string, body []byte, opts ...RequestOpt) (*Request, error) {
+	var err error
 	r := defaultRequest()
-	r.url = url
+	r.rawUrl = url
 	r.method = method
 	r.body = body
-	r.header["Content-Length"] = string((body))
+	r.url, err = NewUrl(url)
+	if err != nil {
+		return nil, err
+	}
+	if body != nil {
+		r.header["Content-Length"] = fmt.Sprint(len(body))
+	}
 	for _, opt := range opts {
 		opt(r)
 	}
-	return r
+	return r, nil
+}
+
+func WithBasicAuth(auth string) RequestOpt {
+	return func(r *Request) {
+		r.BasicAuth(auth)
+	}
 }
 
 // SetVersion
@@ -72,5 +88,24 @@ func (r *Request) SetVersion(ver Version) {
 
 func (r *Request) AddBody(body []byte) {
 	r.body = body
-	r.header["Content-Length"] = fmt.Sprint(len(body))
+	if body != nil {
+		r.header["Content-Length"] = fmt.Sprint(len(body))
+	}
+}
+
+func (r *Request) BasicAuth(auth string) {
+	r.header["Authorization"] = string(base64.StdEncoding.EncodeToString([]byte(auth)))
+}
+
+func (r *Request) raw() []byte {
+	raw := strings.Builder{}
+	raw.WriteString(fmt.Sprintf("%s %s %s\r\n", string(r.method), r.url.PathQuery, string(r.version)))
+	raw.WriteString(fmt.Sprintf("Host: %s\r\n", r.url.Authorithy))
+	for k, v := range r.header {
+		header := fmt.Sprintf("%s: %s\r\n", k, v)
+		raw.WriteString(header)
+	}
+	raw.WriteString("\r\n") // NOTE: Necessary format to separate headers from body
+	raw.WriteString(string(r.body))
+	return []byte(raw.String())
 }
