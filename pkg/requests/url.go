@@ -56,7 +56,8 @@ func schemeExtractor(u string) (scheme string, rest string, err error) {
 	} else if (first < 'a' || first > 'z') && (first < 'A' || first > 'Z') {
 		return "", "", errors.New("First character of scheme is not alphabetical")
 	}
-	for i, v := range u {
+	for i := 1; i < len(u); i++ {
+		v := u[i]
 		switch {
 		case (v >= 'a' && v <= 'z') || (v >= 'A' && v <= 'Z'):
 		case ('0' <= v && v <= '9') || v == '+' || v == '-' || v == '.':

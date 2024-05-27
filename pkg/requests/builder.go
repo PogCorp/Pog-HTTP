@@ -94,7 +94,7 @@ func (r *Request) AddBody(body []byte) {
 }
 
 func (r *Request) BasicAuth(auth string) {
-	r.header["Authorization"] = string(base64.StdEncoding.EncodeToString([]byte(auth)))
+	r.header["Authorization"] = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(auth)))
 }
 
 func (r *Request) raw() []byte {
